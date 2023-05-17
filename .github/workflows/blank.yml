@@ -1,7 +1,3 @@
-# This workflow will build a MuleSoft project and deploy to CloudHub
-
- 
-
 name: Build and Deploy to Sandbox
 
  
@@ -80,9 +76,6 @@ jobs:
         USERNAME: ${{ secrets.USERNAME }}
         PASSWORD: ${{ secrets.PASSWORD }}
       run: |
-        artifactName=$(ls *.jar | head -1)
-        mvn deploy -DmuleDeploy \
-         -Dmule.artifact=$artifactName \
-         -Danypoint.username="$USERNAME" \
-         -Danypoint.password="$PASSWORD" \
+       
+        mvn deploy -DmuleDeploy 
          -DskipTests
