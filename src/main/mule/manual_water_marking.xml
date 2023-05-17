@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="fddc5222-a7e3-4ab5-8a66-2b9d4dd1181c" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="9794a462-7723-463f-a5b3-eb0aa93b7817" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="admin" database="sample" />
+	</db:config>
+	<flow name="manual_water_markingFlow" doc:id="91473e88-2749-4d6c-b571-6e876cc5a6d3" >
+		<scheduler doc:name="Scheduler" doc:id="81b22441-bbca-4093-a067-77e6fbbfce11" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="1" timeUnit="MINUTES"/>
+			</scheduling-strategy>
+		</scheduler>
+		<os:retrieve doc:name="Retrieve" doc:id="b134821d-5aa4-48b3-b815-5689fae1429a" key="id">
+			<os:default-value><![CDATA[0]]></os:default-value>
+		</os:retrieve>
+		<logger level="INFO" doc:name="Logger" doc:id="fae37ca1-b859-476c-9c02-e6bccbbe1404" message="#[payload]"/>
+		<db:select doc:name="Select" doc:id="e0f6a46e-0107-46f7-be38-3f18219a8858" config-ref="Database_Config">
+			<db:sql><![CDATA[select * from sample.emp2 where  id > :id]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	id:payload
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="49b3a81b-ce72-420e-95de-a48c2c35dd78" >
+			<when expression="#[sizeOf(payload) &gt; 0]">
+				<os:store doc:id="a8c1985a-6657-45cd-9e66-c8a1918cca26" key="id">
+			<os:value><![CDATA[#[(payload.id)[-1]]]]></os:value>
+		</os:store>
+				<logger level="INFO" doc:name="Logger" doc:id="2d947836-fffa-45c3-b1ab-9d20f298dec1" message="#[payload]" />
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="5c6951cc-aa8c-4660-836c-eb120a29018d" message='"No  Data in DATA BASE"'/>
+			</otherwise>
+		</choice>
+	</flow>
+</mule>
